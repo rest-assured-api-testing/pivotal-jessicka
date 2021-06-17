@@ -4,9 +4,9 @@ import api.ApiRequest;
 import api.ApiResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import entities.Project;
 import entities.Workspace;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -26,6 +26,27 @@ public class WorkspaceTest {
         apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
     }
 
+    @BeforeMethod(onlyForGroups = "createdWorkspace")
+    public void setCreatedWorkspaceConfig() throws JsonProcessingException {
+        Workspace workspaceTemp = new Workspace();
+        workspaceTemp.setName("Workspace to test");
+        ApiRequest apiRequest = new ApiRequest();
+        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
+        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
+        apiRequest.setEndpoint("/my/workspaces");
+        apiRequest.setMethod(ApiMethod.valueOf("POST"));
+        apiRequest.setBody(new ObjectMapper().writeValueAsString(workspaceTemp));
+        workspace = ApiManager.executeWithBody(apiRequest).getBody(Workspace.class);
+    }
+
+    @AfterMethod(onlyForGroups = "deleteCreatedWorkspace")
+    public void deleteCreatedWorkspaceConfig() {
+        apiRequest.setEndpoint("/my/workspaces/{workspaceId}");
+        apiRequest.setMethod(ApiMethod.DELETE);
+        apiRequest.addPathParam("workspaceId", String.valueOf(workspace.getId()));
+        ApiManager.execute(apiRequest);
+    }
+
     @Test(groups = "workspace")
     public void itShouldGetAllWorkspaces() {
         apiRequest.setMethod(ApiMethod.GET);
@@ -34,11 +55,11 @@ public class WorkspaceTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
-    @Test(groups = "workspace")
+    @Test(groups = {"createdWorkspace","workspace","deleteCreatedWorkspace"})
     public void itShouldGetAWorkspace() {
         apiRequest.setEndpoint("/my/workspaces/{workspaceId}");
         apiRequest.setMethod(ApiMethod.GET);
-        apiRequest.addPathParam("workspaceId", "875999");
+        apiRequest.addPathParam("workspaceId", String.valueOf(workspace.getId()));
         ApiResponse apiResponse = ApiManager.execute(apiRequest);
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
@@ -52,15 +73,16 @@ public class WorkspaceTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = "workspace")
+    @Test(groups = {"workspace","deleteCreatedWorkspace"})
     public void itShouldCreateAWorkspace() throws JsonProcessingException {
         Workspace workspaceTemp = new Workspace();
-        workspaceTemp.setName("Workspace test");
+        workspaceTemp.setName("Workspace created");
         apiRequest.setEndpoint("/my/workspaces");
         apiRequest.setMethod(ApiMethod.POST);
         apiRequest.setBody(new ObjectMapper().writeValueAsString(workspaceTemp));
         ApiResponse apiResponse = ApiManager.executeWithBody(apiRequest);
         apiResponse.getResponse().then().log().body();
+        workspace = apiResponse.getBody(Workspace.class);
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
@@ -76,11 +98,11 @@ public class WorkspaceTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusBadRequest);
     }
 
-    @Test(groups = "workspace")
+    @Test(groups = {"createdWorkspace","workspace"})
     public void itShouldDeleteWorkspace() {
         apiRequest.setEndpoint("/my/workspaces/{workspaceId}");
         apiRequest.setMethod(ApiMethod.DELETE);
-        apiRequest.addPathParam("workspaceId", "876001");
+        apiRequest.addPathParam("workspaceId", String.valueOf(workspace.getId()));
         ApiResponse apiResponse = ApiManager.execute(apiRequest);
         Assert.assertEquals(apiResponse.getStatusCode(), statusNoContent);
     }

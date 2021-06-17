@@ -6,7 +6,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import entities.Project;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class ProjectTest {
 
@@ -25,11 +27,33 @@ public class ProjectTest {
         apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
     }
 
-    @Test(groups = "project")
+    @BeforeMethod(onlyForGroups = "createdProject")
+    public void setCreatedProjectConfig() throws JsonProcessingException {
+        Project projectTemp = new Project();
+        projectTemp.setName("Project to test");
+        ApiRequest apiRequest = new ApiRequest();
+        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
+        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
+        apiRequest.setEndpoint("projects");
+        apiRequest.setMethod(ApiMethod.valueOf("POST"));
+        apiRequest.setBody(new ObjectMapper().writeValueAsString(projectTemp));
+        project = ApiManager.executeWithBody(apiRequest).getBody(Project.class);
+    }
+
+    @AfterMethod(onlyForGroups = "deleteCreatedProject")
+    public void deleteCreatedProjectConfig() {
+        apiRequest.setEndpoint("/projects/{projectId}");
+        apiRequest.setMethod(ApiMethod.DELETE);
+        apiRequest.addPathParam("projectId", String.valueOf(project.getId()));
+        ApiManager.execute(apiRequest);
+    }
+
+
+    @Test(groups = {"createdProject","project","deleteCreatedProject"})
     public void itShouldGetAProject() {
         apiRequest.setEndpoint("/projects/{projectId}");
         apiRequest.setMethod(ApiMethod.GET);
-        apiRequest.addPathParam("projectId", "2504505");
+        apiRequest.addPathParam("projectId", String.valueOf(project.getId()));
         ApiResponse apiResponse = ApiManager.execute(apiRequest);
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
@@ -51,11 +75,11 @@ public class ProjectTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
-    @Test(groups = "project")
+    @Test(groups = {"createdProject","project"})
     public void itShouldDeleteAProject() {
         apiRequest.setEndpoint("/projects/{projectId}");
         apiRequest.setMethod(ApiMethod.DELETE);
-        apiRequest.addPathParam("projectId", "2505085");
+        apiRequest.addPathParam("projectId", String.valueOf(project.getId()));
         ApiResponse apiResponse = ApiManager.execute(apiRequest);
         Assert.assertEquals(apiResponse.getStatusCode(), statusNoContent);
     }
@@ -78,15 +102,16 @@ public class ProjectTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = "project")
+    @Test(groups = {"project","deleteCreatedProject"})
     public void itShouldCreateAProject() throws JsonProcessingException {
         Project projectTemp = new Project();
-        projectTemp.setName("Project created to test");
+        projectTemp.setName("Project created");
         apiRequest.setEndpoint("projects");
         apiRequest.setMethod(ApiMethod.POST);
         apiRequest.setBody(new ObjectMapper().writeValueAsString(projectTemp));
         ApiResponse apiResponse = ApiManager.executeWithBody(apiRequest);
         apiResponse.getResponse().then().log().body();
+        project = apiResponse.getBody(Project.class);
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 

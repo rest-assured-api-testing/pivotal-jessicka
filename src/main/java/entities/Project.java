@@ -8,7 +8,6 @@ import java.util.Date;
 
 public class Project {
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonIgnore
     public int id;
     @JsonIgnore
     public String kind;
@@ -202,7 +201,7 @@ public class Project {
         return ppublic;
     }
 
-    @JsonProperty("publi")
+    @JsonProperty("public")
     public void setPpublic(boolean ppublic) {
         this.ppublic = ppublic;
     }

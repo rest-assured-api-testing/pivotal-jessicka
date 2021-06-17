@@ -9,7 +9,6 @@ public class Workspace {
     @JsonIgnore
     public String kind;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonIgnore
     public int id;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public String name;
