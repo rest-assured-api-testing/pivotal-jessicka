@@ -1,33 +1,64 @@
 package entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Date;
 
 public class Project {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnore
     public int id;
+    @JsonIgnore
     public String kind;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String name;
+    @JsonIgnore
     public int version;
+    @JsonIgnore
     public int iteration_length;
+    @JsonIgnore
     public Enum<WeekDay> week_start_day;
+    @JsonIgnore
     public String point_scale;
+    @JsonIgnore
     public boolean point_scale_is_custom;
+    @JsonIgnore
     public boolean bugs_and_chores_are_estimatable;
+    @JsonIgnore
     public boolean automatic_planning;
+    @JsonIgnore
     public boolean enable_tasks;
+    @JsonIgnore
     public TimeZone time_zone;
+    @JsonIgnore
     public int velocity_averaged_over;
+    @JsonIgnore
     public int number_of_done_iterations_to_show;
+    @JsonIgnore
     public boolean has_google_domain;
+    @JsonIgnore
     public boolean enable_incoming_emails;
+    @JsonIgnore
     public int initial_velocity;
-    public boolean public_;
+    @JsonIgnore
+    public boolean ppublic;
+    @JsonIgnore
     public boolean atom_enabled;
+    @JsonIgnore
     public Enum<ProjectType> project_type;
+    @JsonIgnore
     public Date start_time;
+    @JsonIgnore
     public Date created_at;
+    @JsonIgnore
     public Date updated_at;
+    @JsonIgnore
     public int account_id;
+    @JsonIgnore
     public int current_iteration_number;
+    @JsonIgnore
     public boolean enable_following;
 
     public int getId() {
@@ -166,12 +197,14 @@ public class Project {
         this.initial_velocity = initial_velocity;
     }
 
-    public boolean isPublic_() {
-        return public_;
+    @JsonProperty("public")
+    public boolean isPpublic() {
+        return ppublic;
     }
 
-    public void setPublic_(boolean public_) {
-        this.public_ = public_;
+    @JsonProperty("publi")
+    public void setPpublic(boolean ppublic) {
+        this.ppublic = ppublic;
     }
 
     public boolean isAtom_enabled() {
