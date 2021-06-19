@@ -16,6 +16,9 @@ dependencies {
     implementation 'org.springframework:spring-web:5.3.7'
 
     implementation 'org.testng:testng:7.4.0'
+
+    implementation group: 'io.cucumber', name: 'cucumber-java', version: '6.10.4'
+    implementation group: 'io.cucumber', name: 'cucumber-testng', version: '6.10.4'
 }
 
 test {
