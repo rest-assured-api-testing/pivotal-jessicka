@@ -1,55 +1,20 @@
 import api.ApiManager;
 import api.ApiMethod;
-import api.ApiRequest;
 import api.ApiResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import entities.Project;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class ProjectTest {
+public class ProjectTest extends BaseTest {
 
-    ApiRequest apiRequest = new ApiRequest();
-    Project project = new Project();
-    ConfigFile configFile = new ConfigFile();
     int statusNotFound = 404;
     int statusNoContent = 204;
     int statusOk = 200;
     int statusBadRequest = 400;
 
-    @BeforeMethod(onlyForGroups = "project")
-    public void setGeneralConfig() {
-        apiRequest = new ApiRequest();
-        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
-        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
-    }
-
-    @BeforeMethod(onlyForGroups = "createdProject")
-    public void setCreatedProjectConfig() throws JsonProcessingException {
-        Project projectTemp = new Project();
-        projectTemp.setName("Project to test");
-        ApiRequest apiRequest = new ApiRequest();
-        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
-        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
-        apiRequest.setEndpoint("projects");
-        apiRequest.setMethod(ApiMethod.valueOf("POST"));
-        apiRequest.setBody(new ObjectMapper().writeValueAsString(projectTemp));
-        project = ApiManager.executeWithBody(apiRequest).getBody(Project.class);
-    }
-
-    @AfterMethod(onlyForGroups = "deleteCreatedProject")
-    public void deleteCreatedProjectConfig() {
-        apiRequest.setEndpoint("/projects/{projectId}");
-        apiRequest.setMethod(ApiMethod.DELETE);
-        apiRequest.addPathParam("projectId", String.valueOf(project.getId()));
-        ApiManager.execute(apiRequest);
-    }
-
-
-    @Test(groups = {"createdProject","project","deleteCreatedProject"})
+    @Test(groups = {"createdProject", "setUp", "deleteCreatedProject"})
     public void itShouldGetAProject() {
         apiRequest.setEndpoint("/projects/{projectId}");
         apiRequest.setMethod(ApiMethod.GET);
@@ -58,7 +23,7 @@ public class ProjectTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
-    @Test(groups = "project")
+    @Test(groups = "setUp")
     public void itShouldNotGetAProjectWithInvalidId() {
         apiRequest.setEndpoint("/projects/{projectId}");
         apiRequest.setMethod(ApiMethod.GET);
@@ -67,7 +32,7 @@ public class ProjectTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = "project")
+    @Test(groups = "setUp")
     public void itShouldGetAllProjects() {
         apiRequest.setMethod(ApiMethod.GET);
         apiRequest.setEndpoint("/projects");
@@ -75,7 +40,7 @@ public class ProjectTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
-    @Test(groups = {"createdProject","project"})
+    @Test(groups = {"createdProject", "setUp"})
     public void itShouldDeleteAProject() {
         apiRequest.setEndpoint("/projects/{projectId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -84,7 +49,7 @@ public class ProjectTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNoContent);
     }
 
-    @Test(groups = "project")
+    @Test(groups = "setUp")
     public void itShouldNotDeleteAProjectWithInvalidId() {
         apiRequest.setEndpoint("/projects/{projectId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -93,7 +58,7 @@ public class ProjectTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = "project")
+    @Test(groups = "setUp")
     public void itShouldNotDeleteAProjectWithoutId() {
         apiRequest.setEndpoint("/projects/{projectId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -102,7 +67,7 @@ public class ProjectTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"project","deleteCreatedProject"})
+    @Test(groups = {"setUp","deleteCreatedProject"})
     public void itShouldCreateAProject() throws JsonProcessingException {
         Project projectTemp = new Project();
         projectTemp.setName("Project created");
@@ -115,7 +80,7 @@ public class ProjectTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
-    @Test(groups = "project")
+    @Test(groups = "setUp")
     public void itShouldNotCreateAProjectWithEmptyName() throws JsonProcessingException {
         Project projectTemp = new Project();
         projectTemp.setName("");

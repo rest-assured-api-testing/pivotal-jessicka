@@ -1,81 +1,19 @@
 import api.ApiManager;
 import api.ApiMethod;
-import api.ApiRequest;
 import api.ApiResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import entities.Project;
 import entities.Story;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class StoryTest {
-    ApiRequest apiRequest = new ApiRequest();
-    Story story = new Story();
-    Project project = new Project();
-    ConfigFile configFile = new ConfigFile();
+public class StoryTest extends BaseTest {
     int statusNotFound = 404;
     int statusNoContent = 204;
     int statusOk = 200;
     int statusBadRequest = 400;
 
-    @BeforeMethod(onlyForGroups = "createdProject")
-    public void createProjectToTestStory() throws JsonProcessingException {
-        Project projectTemp = new Project();
-        projectTemp.setName("Project to test in story");
-        ApiRequest apiRequest = new ApiRequest();
-        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
-        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
-        apiRequest.setEndpoint("projects");
-        apiRequest.setMethod(ApiMethod.valueOf("POST"));
-        apiRequest.setBody(new ObjectMapper().writeValueAsString(projectTemp));
-        project = ApiManager.executeWithBody(apiRequest).getBody(Project.class);
-    }
-
-    @BeforeMethod(onlyForGroups = "story")
-    public void setGeneralConfig() throws JsonProcessingException {
-        apiRequest = new ApiRequest();
-        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
-        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
-    }
-
-    @BeforeMethod(onlyForGroups = "createdStory")
-    public void setCreatedStoryConfig() throws JsonProcessingException {
-        Story storyTemp = new Story();
-        storyTemp.setName("Story to test");
-        ApiRequest apiRequest = new ApiRequest();
-        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
-        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
-        apiRequest.setEndpoint("projects/{projectId}/stories");
-        apiRequest.setMethod(ApiMethod.valueOf("POST"));
-        apiRequest.addPathParam("projectId", String.valueOf(project.getId()));
-        apiRequest.setBody(new ObjectMapper().writeValueAsString(storyTemp));
-        story = ApiManager.executeWithBody(apiRequest).getBody(Story.class);
-    }
-
-    @AfterMethod(onlyForGroups = "deleteCreatedStory")
-    public void deleteCreatedStoryConfig() {
-        apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
-        apiRequest.setMethod(ApiMethod.DELETE);
-        apiRequest.addPathParam("storyId", String.valueOf(story.getId()));
-        apiRequest.addPathParam("projectId", String.valueOf(project.getId()));
-        ApiManager.execute(apiRequest);
-    }
-
-    @AfterMethod(onlyForGroups = "deleteProjectOfStory")
-    public void deleteCreatedProjectToTestStory() {
-        ApiRequest apiRequest = new ApiRequest();
-        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
-        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
-        apiRequest.setEndpoint("/projects/{projectId}");
-        apiRequest.setMethod(ApiMethod.DELETE);
-        apiRequest.addPathParam("projectId", String.valueOf(project.getId()));
-        ApiManager.execute(apiRequest);
-    }
-
-    @Test(groups = {"createdProject","createdStory","story","deleteCreatedStory","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","createdStory","setUp","deleteCreatedStory","deleteCreatedProject"})
     public void itShouldGetAStory() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
         apiRequest.setMethod(ApiMethod.GET);
@@ -85,7 +23,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotGetAStoryWithInvalidId() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
         apiRequest.setMethod(ApiMethod.GET);
@@ -95,7 +33,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotGetAStoryWithInvalidProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
         apiRequest.setMethod(ApiMethod.GET);
@@ -105,7 +43,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotGetAStoryWithInvalidIdAndProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
         apiRequest.setMethod(ApiMethod.GET);
@@ -115,7 +53,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldGetAllStoriesOfAProject() {
         apiRequest.setMethod(ApiMethod.GET);
         apiRequest.setEndpoint("/projects/{projectId}/stories");
@@ -124,7 +62,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotGetAllStoriesOfAProjectWithInvalidId() {
         apiRequest.setMethod(ApiMethod.GET);
         apiRequest.setEndpoint("/projects/{projectId}/stories");
@@ -133,7 +71,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotGetAllStoriesOfAProjectWithoutId() {
         apiRequest.setMethod(ApiMethod.GET);
         apiRequest.setEndpoint("/projects/{projectId}/stories");
@@ -142,7 +80,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","createdStory","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","createdStory","setUp","deleteCreatedProject"})
     public void itShouldDeleteAStory() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -152,7 +90,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNoContent);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAStoryWithInvalidId() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -162,7 +100,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAStoryWithoutId() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -172,7 +110,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAStoryWithoutProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -182,7 +120,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAStoryWithoutIdNorProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -192,7 +130,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAStoryWithInvalidProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -202,7 +140,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAStoryWithInvalidIdAndInvalidProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -212,7 +150,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","story","deleteCreatedStory","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedStory","deleteCreatedProject"})
     public void itShouldCreateAStory() throws JsonProcessingException {
         Story storyTemp = new Story();
         storyTemp.setName("Story created");
@@ -226,7 +164,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotCreateAStoryWithEmptyName() throws JsonProcessingException {
         Story storyTemp = new Story();
         storyTemp.setName("");
@@ -239,7 +177,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusBadRequest);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotCreateAStoryWithoutProjectId() throws JsonProcessingException {
         Story storyTemp = new Story();
         storyTemp.setName("Story created");
@@ -252,7 +190,7 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotCreateAStoryWithInvalidProjectId() throws JsonProcessingException {
         Story storyTemp = new Story();
         storyTemp.setName("Story created");

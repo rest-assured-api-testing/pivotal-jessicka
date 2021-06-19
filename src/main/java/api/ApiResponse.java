@@ -12,6 +12,10 @@ public class ApiResponse {
         this.response = response;
     }
 
+    public ApiResponse(){
+
+    }
+
     public Response getResponse() {
         return response;
     }

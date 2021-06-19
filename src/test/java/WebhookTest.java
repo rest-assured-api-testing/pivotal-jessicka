@@ -1,81 +1,19 @@
 import api.ApiManager;
 import api.ApiMethod;
-import api.ApiRequest;
 import api.ApiResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import entities.Project;
 import entities.Webhook;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class WebhookTest {
-    ApiRequest apiRequest = new ApiRequest();
-    Webhook webhook = new Webhook();
-    Project project = new Project();
-    ConfigFile configFile = new ConfigFile();
+public class WebhookTest extends BaseTest {
     int statusNotFound = 404;
     int statusNoContent = 204;
     int statusOk = 200;
     int statusBadRequest = 400;
 
-    @BeforeMethod(onlyForGroups = "createdProject")
-    public void createProjectToTestWebhook() throws JsonProcessingException {
-        Project projectTemp = new Project();
-        projectTemp.setName("Project to test in webhook");
-        ApiRequest apiRequest = new ApiRequest();
-        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
-        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
-        apiRequest.setEndpoint("projects");
-        apiRequest.setMethod(ApiMethod.valueOf("POST"));
-        apiRequest.setBody(new ObjectMapper().writeValueAsString(projectTemp));
-        project = ApiManager.executeWithBody(apiRequest).getBody(Project.class);
-    }
-
-    @BeforeMethod(onlyForGroups = "webhook")
-    public void setGeneralConfig() throws JsonProcessingException {
-        apiRequest = new ApiRequest();
-        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
-        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
-    }
-
-    @BeforeMethod(onlyForGroups = "createdWebhook")
-    public void setCreatedWebhookConfig() throws JsonProcessingException {
-        Webhook webhookTemp = new Webhook();
-        webhookTemp.setWebhook_url("https://www.webhooktotest.com/");
-        ApiRequest apiRequest = new ApiRequest();
-        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
-        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
-        apiRequest.setEndpoint("projects/{projectId}/webhooks");
-        apiRequest.setMethod(ApiMethod.valueOf("POST"));
-        apiRequest.addPathParam("projectId", String.valueOf(project.getId()));
-        apiRequest.setBody(new ObjectMapper().writeValueAsString(webhookTemp));
-        webhook = ApiManager.executeWithBody(apiRequest).getBody(Webhook.class);
-    }
-
-    @AfterMethod(onlyForGroups = "deleteCreatedWebhook")
-    public void deleteCreatedWebhookConfig() {
-        apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
-        apiRequest.setMethod(ApiMethod.DELETE);
-        apiRequest.addPathParam("webhookId", String.valueOf(webhook.getId()));
-        apiRequest.addPathParam("projectId", String.valueOf(project.getId()));
-        ApiManager.execute(apiRequest);
-    }
-
-    @AfterMethod(onlyForGroups = "deleteProjectOfWebhook")
-    public void deleteCreatedProjectToTestWebhook() {
-        ApiRequest apiRequest = new ApiRequest();
-        apiRequest.addHeader("X-TrackerToken", configFile.getConfig().getProperty("PIVOTAL_TOKEN"));
-        apiRequest.setBaseUri(configFile.getConfig().getProperty("PIVOTAL_BASE_URI"));
-        apiRequest.setEndpoint("/projects/{projectId}");
-        apiRequest.setMethod(ApiMethod.DELETE);
-        apiRequest.addPathParam("projectId", String.valueOf(project.getId()));
-        ApiManager.execute(apiRequest);
-    }
-
-    @Test(groups = {"createdProject","createdWebhook","webhook","deleteCreatedWebhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","createdWebhook","setUp","deleteCreatedWebhook","deleteCreatedProject"})
     public void itShouldGetAWebhook() {
         apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
         apiRequest.setMethod(ApiMethod.GET);
@@ -85,7 +23,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotGetAWebhookWithInvalidId() {
         apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
         apiRequest.setMethod(ApiMethod.GET);
@@ -95,7 +33,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotGetAWebhookWithInvalidProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
         apiRequest.setMethod(ApiMethod.GET);
@@ -105,7 +43,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotGetAWebhookWithInvalidIdAndProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
         apiRequest.setMethod(ApiMethod.GET);
@@ -115,7 +53,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldGetAllWebhooksOfAProject() {
         apiRequest.setMethod(ApiMethod.GET);
         apiRequest.setEndpoint("/projects/{projectId}/webhooks");
@@ -124,7 +62,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotGetAllWebhooksOfAProjectWithInvalidId() {
         apiRequest.setMethod(ApiMethod.GET);
         apiRequest.setEndpoint("/projects/{projectId}/webhooks");
@@ -133,7 +71,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotGetAllWebhooksOfAProjectWithoutId() {
         apiRequest.setMethod(ApiMethod.GET);
         apiRequest.setEndpoint("/projects/{projectId}/webhooks");
@@ -142,7 +80,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","createdWebhook","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","createdWebhook","setUp","deleteCreatedProject"})
     public void itShouldDeleteAWebhook() {
         apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -152,7 +90,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNoContent);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAWebhookWithInvalidId() {
         apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -162,7 +100,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAWebhookWithoutId() {
         apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -172,7 +110,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAWebhookWithoutProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -182,7 +120,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAWebhookWithoutIdNorProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -192,7 +130,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAWebhookWithInvalidProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -202,7 +140,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotDeleteAWebhookWithInvalidIdAndInvalidProjectId() {
         apiRequest.setEndpoint("/projects/{projectId}/webhooks/{webhookId}");
         apiRequest.setMethod(ApiMethod.DELETE);
@@ -212,7 +150,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteCreatedWebhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedWebhook","deleteCreatedProject"})
     public void itShouldCreateAWebhook() throws JsonProcessingException {
         Webhook webhookTemp = new Webhook();
         webhookTemp.setWebhook_url("https://www.webhooktotest.com/");
@@ -226,7 +164,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotCreateAWebhookWithEmptyName() throws JsonProcessingException {
         Webhook webhookTemp = new Webhook();
         webhookTemp.setWebhook_url("");
@@ -239,7 +177,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusBadRequest);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotCreateAWebhookWithoutProjectId() throws JsonProcessingException {
         Webhook webhookTemp = new Webhook();
         webhookTemp.setWebhook_url("https://www.webhooktotest.com/");
@@ -252,7 +190,7 @@ public class WebhookTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
     }
 
-    @Test(groups = {"createdProject","webhook","deleteProjectOfWebhook"})
+    @Test(groups = {"createdProject","setUp","deleteCreatedProject"})
     public void itShouldNotCreateAWebhookWithInvalidProjectId() throws JsonProcessingException {
         Webhook webhookTemp = new Webhook();
         webhookTemp.setWebhook_url("https://www.webhooktotest.com/");
