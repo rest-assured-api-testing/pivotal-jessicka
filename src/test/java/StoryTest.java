@@ -124,6 +124,24 @@ public class StoryTest {
         Assert.assertEquals(apiResponse.getStatusCode(), statusOk);
     }
 
+    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    public void itShouldNotGetAllStoriesOfAProjectWithInvalidId() {
+        apiRequest.setMethod(ApiMethod.GET);
+        apiRequest.setEndpoint("/projects/{projectId}/stories");
+        apiRequest.addPathParam("projectId", "651231654165165");
+        ApiResponse apiResponse = ApiManager.execute(apiRequest);
+        Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
+    }
+
+    @Test(groups = {"createdProject","story","deleteProjectOfStory"})
+    public void itShouldNotGetAllStoriesOfAProjectWithoutId() {
+        apiRequest.setMethod(ApiMethod.GET);
+        apiRequest.setEndpoint("/projects/{projectId}/stories");
+        apiRequest.addPathParam("projectId", "");
+        ApiResponse apiResponse = ApiManager.execute(apiRequest);
+        Assert.assertEquals(apiResponse.getStatusCode(), statusNotFound);
+    }
+
     @Test(groups = {"createdProject","createdStory","story","deleteProjectOfStory"})
     public void itShouldDeleteAStory() {
         apiRequest.setEndpoint("/projects/{projectId}/stories/{storyId}");
@@ -222,7 +240,7 @@ public class StoryTest {
     }
 
     @Test(groups = {"createdProject","story","deleteProjectOfStory"})
-    public void itShouldNotCreateAStoryWithEmptyProjectId() throws JsonProcessingException {
+    public void itShouldNotCreateAStoryWithoutProjectId() throws JsonProcessingException {
         Story storyTemp = new Story();
         storyTemp.setName("Story created");
         apiRequest.setEndpoint("projects/{projectId}/stories");
@@ -235,7 +253,7 @@ public class StoryTest {
     }
 
     @Test(groups = {"createdProject","story","deleteProjectOfStory"})
-    public void itShouldNotCreateAStoryWithoutProjectId() throws JsonProcessingException {
+    public void itShouldNotCreateAStoryWithInvalidProjectId() throws JsonProcessingException {
         Story storyTemp = new Story();
         storyTemp.setName("Story created");
         apiRequest.setEndpoint("projects/{projectId}/stories");
